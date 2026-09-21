@@ -1,44 +1,23 @@
 # yields-app-js
 
-Also hosted at [Github](https://github.com/tdaniels715/yields-app-js), and will add TS version within next few days (after debug) at [Github](https://github.com/tdaniels715/yields-app-js),
+A simple web-page that uses the published *par-yields* of (U.S.) Treasury securities to "bootstrap" the *yield-curve* of monthly *zero-rates* (that is, to price *zero-coupon bonds*) for a range of maturities. 
 
-(update 09/12 : fixed a small bug in the main.py and tools.py files)
+The backend is a Python FastAPI server that pulls and processes daily Treasury yield curve data, either fresh from `TreasuryDirect.gov`'s yield curve XML feeds, or from the SQLite3 database `/backend/data/par-yields-all.db`. The frontend (in `frontend-ts`) plots the interpolated yield curve, and allows users to select and save the computed curve data for historical dates. The app's main page also documents the necessary definitions and math used in our computations.
 
-—-
-
-Before building the app, run
-
-```
-% cd frontend
-% npm install
+The entire app may be built and started in a Docker container using
+```sh
+build-start.sh
 ```
 
-as the folder `frontend/dist` is built into the docker image. You can build and start the container with
-
+#### Repo Structure
 ```
-./build-and-run-docker-image.sh
-```
-
-will both build the necessary container that has `frontend` and `backend` together, and expose the right port.
-
-The backend reads data from `/backend/data/par_yields_all.db` using SQLite3 unless you use the "Get Latest" button, in which case it pulls the latest month's data and gives whatever the most recent trading day's data is.
-
-I worked on this using Vite+React inside JetBrains Pycharm+Webstorm (for the backend and frontend, resp.). This recreated the graph from the assignment brief, as well as successfully pulled data from TreasuryDirect.gov and the database mentioned (it looks up if it already has the data before trying). I wrote the frontend in Typescript (will upload Friday) and only at the last minute duplicated a JS-only version to hopefully resolve the following bug...
-
-#### A Note/in-progress investigation:
-
-Something quite strange may occur upon building the docker image and running the entire app out of the container... the returned data seems to drop two of the time series points, wildly altering the shape of the graph.
-
-Thus, if the zero curve looks odd, try running the backend and frontend separately:
-
-```
-% cd backend 
-% ./docker-entrypoint.sh
+yields-app/
+├─ backend/
+│  ├─ data/
+│  └─ src/backend/
+├─ frontend-js/ # JS/JSX-only version
+├─ frontend-ts/ # primary frontend
+└─ misc/ 
 ```
 
-```
-% cd frontend
-% npm install && npm run dev
-```
-
-and connecting to the port shown there (should be `localhost:5179`)
+<!-- <img style="display: block; margin-left: auto; margin-right: auto; margin-top: 0; margin-bottom: 0;scale: 60%; border: 5px solid #365687; max-width: 800px; max-height:600px"  src='misc/hurdle.png'/> -->

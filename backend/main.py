@@ -1,11 +1,11 @@
-import os, time, asyncio
+import os
 from src.backend.tools import *
 from src.backend.get_pars import *
 
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
-static_html_path = os.getenv("STATIC_HTML_PATH") or "../frontend/dist"
+static_html_path = os.getenv("STATIC_HTML_PATH") or "../frontend-js/dist"
 
 app = FastAPI()
 app.add_middleware(
@@ -20,34 +20,52 @@ app.frontend("/", directory=static_html_path)
 # a temporary wrapper for the different datasets;
 def compute_zero_curve(date, par_data):
     if par_data == []:
-        _data = {
+        data = {
             "date": f"{date} does not have data.",
             "parNodes": [],
-            "discountNodes": [],
+            "parPlots": [],
+            "priceNodes": [],
             "zeroNodes": [],
-            "zeroLogs": []
+            "zeroPlots": []
         }
-        return _data
+        return data
 
     # some dates don't have values for every maturity, and have
     #   (tau, None)
-    # instead. We don't want to use those in the interpolation, so we drop.
+    # instead. We don't use these in the interpolation.
     par_nodes = [x for x in par_data if x[1] is not None]
-    D_nodes, Z_nodes, Z_log = zeros_from_par_nodes(par_nodes, freq=2)
 
-    _data = {
+    C_nodes, C_t, P_nodes, Z_nodes, Z_t = zeros_from_par_nodes(par_nodes, freq=2)
+
+    data = {
         "date": date,
-        "parNodes": par_nodes,
-        "discountNodes": D_nodes,
+        "parNodes": C_nodes,
+        "parPlots": C_t,
+        "priceNodes": P_nodes,
         "zeroNodes": Z_nodes,
-        "zeroLogs": Z_log
+        "zeroPlots": Z_t
     }
 
-    return _data
+    assert len(data["parNodes"]) == len(data["priceNodes"]), "Mismatched price data length"
+    assert len(data["parNodes"]) == len(data["zeroNodes"]), "Mismatched zeros data length"
+
+    return data
+
+# For testing
+def pprint(dic):
+    print(f"date: {dic['date']}")
+    print("C \t\t\t\t\t P \t\t\t\t\t Z")
+    print("===============================")
+    for i in range(len(dic['parNodes'])) :
+        tC, C = dic['parNodes'][i]
+        tP, P = dic['priceNodes'][i]
+        tZ, Z = dic['zeroNodes'][i]
+
+        print(f"({tC:.3f}, {C:.3f}), \t\t\t ({tP:.3f}, {P:.3f}), \t\t\t ({tZ:.3f}, {Z:.3f})")
 
 # ===============================================
 @app.get("/api/v1/yieldcurve/{date}")
-async def get_yield_curve(date: str):
+async def yield_curve(date: str):
     if date=="latest" :
         latest_date, par_data = get_latest_pars()
         return compute_zero_curve(latest_date, par_data)
