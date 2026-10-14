@@ -1,10 +1,9 @@
 [project]
 name = "backend"
 version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
+description = "backend for yields-app"
 authors = [
-    { name = "Taylor Daniels", email = "tdan1101@gmail.com" }
+    { name = "Taylor Daniels", email = "taylor.daniels715@gmail.com" }
 ]
 requires-python = ">=3.13"
 dependencies = [
